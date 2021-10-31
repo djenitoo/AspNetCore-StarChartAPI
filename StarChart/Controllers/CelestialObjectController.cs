@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using StarChart.Data;
+using StarChart.Models;
 
 namespace StarChart.Controllers
 {
@@ -62,6 +63,69 @@ namespace StarChart.Controllers
             }
 
             return Ok(items);
+        }
+
+        [HttpPost]
+        public IActionResult Create([FromBody]CelestialObject item)
+        {
+            _context.CelestialObjects.Add(item);
+            _context.SaveChanges();
+
+            return CreatedAtRoute("GetById", routeValues: new { id = item.Id }, value: item);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult Update(int id, CelestialObject item)
+        {
+            var celestialObject = _context.CelestialObjects.FirstOrDefault(i => i.Id == id);
+
+            if (celestialObject == null)
+            {
+                return NotFound();
+            }
+
+            celestialObject.Name = item.Name;
+            celestialObject.OrbitalPeriod = item.OrbitalPeriod;
+            celestialObject.OrbitedObjectId = item.OrbitedObjectId;
+
+            _context.Update(celestialObject);
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{id}/{name}")]
+        public IActionResult RenameObject(int id, string name)
+        {
+            var celestialObject = _context.CelestialObjects.FirstOrDefault(i => i.Id == id);
+
+            if (celestialObject == null)
+            {
+                return NotFound();
+            }
+
+            celestialObject.Name = name;
+
+            _context.Update(celestialObject);
+            _context.SaveChanges();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            var items = _context.CelestialObjects.Where(i => i.Id == id || i.OrbitedObjectId == id).ToList();
+
+            if (items.Count == 0)
+            {
+                return NotFound();
+            }
+
+            _context.RemoveRange(items);
+            _context.SaveChanges();
+
+            return NoContent();
         }
     }
 }
